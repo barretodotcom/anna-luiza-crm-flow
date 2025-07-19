@@ -164,6 +164,36 @@ export type Database = {
         }
         Relationships: []
       }
+      anna_luiza_usuarios: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          email: string
+          id: string
+          nome: string
+          senha_hash: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          email: string
+          id?: string
+          nome: string
+          senha_hash: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          email?: string
+          id?: string
+          nome?: string
+          senha_hash?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       carros: {
         Row: {
           ano: number
@@ -504,6 +534,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      authenticate_user: {
+        Args: { email_input: string; senha_input: string }
+        Returns: {
+          id: string
+          email: string
+          nome: string
+          ativo: boolean
+        }[]
+      }
       get_user_concessionaria_id: {
         Args: Record<PropertyKey, never>
         Returns: string
