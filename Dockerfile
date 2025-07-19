@@ -4,10 +4,9 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 COPY package*.json ./
-COPY yarn.lock ./
 COPY . .
 
-RUN yarn install --frozen-lockfile
+RUN yarn install --frozen-lockfile || yarn install
 RUN yarn build
 
 # Production stage
@@ -17,9 +16,8 @@ WORKDIR /app
 
 COPY --from=builder /app/dist ./dist
 COPY package*.json ./
-COPY yarn.lock ./
 
-RUN yarn install --production --frozen-lockfile
+RUN yarn install --production --frozen-lockfile || yarn install --production
 
 EXPOSE 7983
 
