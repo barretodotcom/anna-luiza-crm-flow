@@ -291,8 +291,9 @@ const Clientes = () => {
                 className="w-full p-2 border border-border rounded-md bg-background/50"
               >
                 <option value="EM_ATENDIMENTO">Em Atendimento</option>
+                <option value="CONSULTORIA_AGENDADA">Consultoria Agendada</option>
+                <option value="PROPOSTA_CUSTOMIZADA">Proposta Customizada</option>
                 <option value="FINALIZADO">Finalizado</option>
-                <option value="AGUARDANDO">Aguardando</option>
               </select>
             </div>
             

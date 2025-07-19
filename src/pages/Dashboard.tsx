@@ -1,49 +1,90 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, FileText, Calendar, TrendingUp } from 'lucide-react';
+import { Users, FileText, Clock } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  const [totalClientes, setTotalClientes] = useState(0);
+  const [casosAtivos, setCasosAtivos] = useState(0);
+  const [atendimentosHoje, setAtendimentosHoje] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('anna_luiza_clientes')
+        .select('STATUS,last_message_timestamp');
+
+      if (!error && data) {
+        setTotalClientes(data.length);
+        setCasosAtivos(
+          data.filter(
+            (c) =>
+              c.STATUS !== 'EM_ATENDIMENTO' &&
+              c.STATUS !== 'CONSULTORIA_AGENDADA'
+          ).length
+        );
+
+        // Atendimentos hoje: status EM_ATENDIMENTO ou CONSULTORIA_AGENDADA e last_message_timestamp é hoje
+        const hoje = new Date();
+        const atendimentos = data.filter((c) => {
+          if (
+            c.STATUS === 'EM_ATENDIMENTO' ||
+            c.STATUS === 'CONSULTORIA_AGENDADA'
+          ) {
+            if (c.last_message_timestamp) {
+              const msgDate = new Date(c.last_message_timestamp);
+              return (
+                msgDate.getDate() === hoje.getDate() &&
+                msgDate.getMonth() === hoje.getMonth() &&
+                msgDate.getFullYear() === hoje.getFullYear()
+              );
+            }
+          }
+          return false;
+        });
+        setAtendimentosHoje(atendimentos.length);
+      }
+      setLoading(false);
+    };
+    fetchStats();
+  }, []);
+
   const stats = [
     {
       title: "Total de Clientes",
-      value: "0",
-      description: "Clientes cadastrados",
+      value: loading ? '...' : totalClientes.toString(),
+      description: (totalClientes != 1 ? "Clientes " : "Cliente ") + "cadastrados",
       icon: Users,
       color: "text-blue-500",
     },
     {
       title: "Casos Ativos",
-      value: "0",
-      description: "Em andamento",
+      value: loading ? '...' : casosAtivos.toString(),
+      description: (casosAtivos != 1 ? "Clientes " : "Cliente ") + "com casos ativos",
       icon: FileText,
       color: "text-green-500",
     },
     {
-      title: "Consultas Hoje",
-      value: "0",
-      description: "Agendadas para hoje",
-      icon: Calendar,
-      color: "text-purple-500",
-    },
-    {
-      title: "Crescimento",
-      value: "0%",
-      description: "Este mês",
-      icon: TrendingUp,
-      color: "text-orange-500",
+      title: "Atendimentos Hoje",
+      value: loading ? '...' : atendimentosHoje.toString(),
+      description: (atendimentosHoje != 1 ? "Clientes atendidos " : "Cliente atendido ") + "hoje",
+      icon: Clock,
+      color: "text-yellow-500",
     },
   ];
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Dashboard</h1>
+        <h1 className="text-3xl font-bold">Dashboard Inteligência Artificial</h1>
         <p className="text-muted-foreground">
           Bem-vindo de volta, {user?.nome}
         </p>

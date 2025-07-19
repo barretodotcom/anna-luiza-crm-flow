@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { Users, Scale, LogOut, Menu } from "lucide-react";
+import { Users, Scale, LogOut, User, Workflow, Home } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -17,7 +17,10 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 
 const items = [
+  { title: "Tela Inicial", url: "/dashboard", icon: Home },
   { title: "Clientes", url: "/dashboard/clientes", icon: Users },
+  { title: "Membros", url: "/dashboard/membros/listagem", icon: Workflow },
+  { title: "Perfil", url: "/perfil", icon: User },
 ];
 
 export function AppSidebar() {
