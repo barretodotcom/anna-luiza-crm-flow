@@ -17,9 +17,8 @@ const Membros = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Exemplo simples de hash (substitua por bcrypt/scrypt em produção)
   const hashSenha = (senha: string) => {
-    return btoa(senha); // NÃO USE EM PRODUÇÃO!
+    return btoa(senha);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -31,23 +30,29 @@ const Membros = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase
+      const { error, data } = await supabase
         .from('anna_luiza_usuarios')
         .insert({
           nome: form.nome,
           email: form.email,
           senha_hash: hashSenha(form.senha),
-        });
+        })
+        .select('id');
 
-      if (error) throw error;
+        if (error) throw error;
+
+        const { error: updateError } = await supabase.rpc('update_user_password', {
+          user_id: data[0].id,
+          nova_senha: form.senha,
+        });
 
       toast({
         title: "Membro cadastrado",
         description: "O membro foi cadastrado com sucesso.",
       });
-
+      
       setForm({ nome: '', email: '', senha: '' });
-      navigate('/dashboard/membros/listagem');
+    navigate('/dashboard/membros/listagem');
     } catch (error: any) {
       toast({
         variant: "destructive",

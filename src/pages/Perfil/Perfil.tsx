@@ -91,8 +91,8 @@ const Perfil = () => {
 
         // Atualiza senha usando função segura do banco
         const { error: updateError } = await supabase.rpc('update_user_password', {
-        user_id: user?.id,
-        nova_senha: form.novaSenha,
+          user_id: user?.id,
+          nova_senha: form.novaSenha,
         });
 
         if (updateError) throw updateError;
