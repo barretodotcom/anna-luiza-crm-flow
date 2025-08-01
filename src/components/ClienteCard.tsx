@@ -85,29 +85,28 @@ const ClienteCard: React.FC<ClienteCardProps> = ({
       style={style}
       {...attributes}
       {...listeners}
-      className={`cursor-pointer transition-all duration-300 crm-card hover:shadow-xl hover:scale-[1.02] hover:-translate-y-1 ${
-        locked ? 'border-l-4 border-l-info shadow-info/20' : 'hover:border-primary/30'
-      } ${isDragging ? 'shadow-2xl rotate-2 scale-110 ring-2 ring-primary/50' : ''}`}
+      className={`cursor-pointer transition-all duration-300 crm-card hover:shadow-lg hover:scale-[1.01] hover:-translate-y-0.5 hover:border-primary/30 ${
+        isDragging ? 'shadow-xl rotate-1 scale-105 ring-2 ring-primary/50' : ''
+      }`}
       onClick={handleCardClick}
     >
-      <CardContent className="p-5">
-        <div className="space-y-4">
+      <CardContent className="p-3">
+        <div className="space-y-3">
           <div className="flex items-start justify-between">
-            <div className="flex-1 space-y-2">
-              <h3 className="font-semibold text-base flex items-center gap-2 text-foreground">
-                {locked && <Lock className="h-4 w-4 text-info" />}
-                <User className="h-4 w-4 text-primary" />
+            <div className="flex-1 space-y-1">
+              <h3 className="font-medium text-sm flex items-center gap-1.5 text-foreground">
+                <User className="h-3.5 w-3.5 text-primary" />
                 {cliente.name || 'Nome não informado'}
               </h3>
-              <p className="text-sm text-muted-foreground truncate leading-relaxed">
+              <p className="text-xs text-muted-foreground truncate">
                 {cliente.interesse || 'Interesse não informado'}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Calendar className="h-4 w-4" />
+          <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <Calendar className="h-3.5 w-3.5" />
               <span>
                 {formatDate(cliente.created_at)}
               </span>
@@ -116,33 +115,33 @@ const ClienteCard: React.FC<ClienteCardProps> = ({
             {processosCount > 0 && (
               <Badge 
                 variant="secondary" 
-                className="text-xs bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-colors"
+                className="text-xs bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-colors px-1.5 py-0.5"
               >
-                <Briefcase className="h-3 w-3 mr-1" />
+                <Briefcase className="h-3 w-3 mr-0.5" />
                 {processosCount}
               </Badge>
             )}
           </div>
 
           {cliente.informacoes_adicionais && (
-            <div className="bg-muted/30 p-3 rounded-lg border border-border/30">
-              <div className="flex items-start gap-2">
-                <FileText className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
+            <div className="bg-muted/30 p-2 rounded border border-border/30">
+              <div className="flex items-start gap-1.5">
+                <FileText className="h-3.5 w-3.5 text-primary mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-muted-foreground line-clamp-2">
                   {cliente.informacoes_adicionais}
                 </p>
               </div>
             </div>
           )}
 
-          <div className="flex items-center justify-between pt-2 border-t border-border/30">
-            <div className="flex items-center space-x-4 text-sm">
-              <div className="flex items-center space-x-2">
-                <div className={`w-3 h-3 rounded-full transition-colors ${cliente.agendamento_realizado ? 'bg-success shadow-success/50 shadow-sm' : 'bg-muted-foreground/30'}`}></div>
-                <span className="text-muted-foreground">Agendamento</span>
+          <div className="flex items-center justify-between pt-1.5 border-t border-border/30">
+            <div className="flex items-center space-x-3 text-xs">
+              <div className="flex items-center space-x-1">
+                <div className={`w-2 h-2 rounded-full transition-colors ${cliente.agendamento_realizado ? 'bg-success shadow-success/50 shadow-sm' : 'bg-muted-foreground/30'}`}></div>
+                <span className="text-muted-foreground">Agenda</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <div className={`w-3 h-3 rounded-full transition-colors ${cliente.follow_up_1_realizado ? 'bg-success shadow-success/50 shadow-sm' : 'bg-muted-foreground/30'}`}></div>
+              <div className="flex items-center space-x-1">
+                <div className={`w-2 h-2 rounded-full transition-colors ${cliente.follow_up_1_realizado ? 'bg-success shadow-success/50 shadow-sm' : 'bg-muted-foreground/30'}`}></div>
                 <span className="text-muted-foreground">Follow-up</span>
               </div>
             </div>
@@ -152,8 +151,7 @@ const ClienteCard: React.FC<ClienteCardProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={handleGerenciarProcessos}
-                disabled={locked}
-                className="h-7 w-7 p-0 hover:bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="h-6 w-6 p-0 hover:bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity"
                 title="Gerenciar Processos"
               >
                 <Scale className="h-3 w-3" />

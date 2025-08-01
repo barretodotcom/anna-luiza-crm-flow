@@ -121,19 +121,7 @@ const KanbanBoard = () => {
     }
 
     const clienteId = parseInt(active.id as string);
-    const cliente = clientes.find(c => c.id === clienteId);
     const newStatus = over.id as string;
-    
-    // Verificar se o cliente está em atendimento - impedir mudança
-    if (cliente?.STATUS === 'EM_ATENDIMENTO') {
-      toast({
-        variant: "destructive",
-        title: "Ação não permitida",
-        description: "Clientes em atendimento não podem ter o status alterado",
-      });
-      setActiveId(null);
-      return;
-    }
     
     // Verificar se o status é válido
     const validStatus = STATUS_COLUMNS.find(col => col.id === newStatus);
@@ -176,31 +164,12 @@ const KanbanBoard = () => {
   };
 
   const handleClienteClick = (cliente: Cliente) => {
-    if (cliente.STATUS === 'EM_ATENDIMENTO') {
-      toast({
-        variant: "destructive",
-        title: "Cliente em atendimento",
-        description: "Não é possível gerenciar processos de clientes em atendimento",
-      });
-      return;
-    }
-    
     setSelectedClienteId(cliente.id);
     setProcessosDialogOpen(true);
   };
 
   const handleGerenciarProcessos = (cliente: Cliente, event: React.MouseEvent) => {
     event.stopPropagation();
-    
-    if (cliente.STATUS === 'EM_ATENDIMENTO') {
-      toast({
-        variant: "destructive",
-        title: "Cliente em atendimento",
-        description: "Não é possível gerenciar processos de clientes em atendimento",
-      });
-      return;
-    }
-    
     setSelectedClienteId(cliente.id);
     setProcessosDialogOpen(true);
   };
@@ -222,46 +191,30 @@ const KanbanBoard = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="space-y-2">
-          <h2 className="text-2xl font-bold text-foreground">
-            Board de Clientes
-          </h2>
-          <p className="text-muted-foreground">
-            Arraste e solte para alterar o status dos clientes
-          </p>
-        </div>
-        <div className="flex items-center gap-4">
-          <Badge variant="outline" className="text-sm px-4 py-2 border-primary/20 bg-primary/5">
-            Total: {clientes.length} cliente(s)
-          </Badge>
-        </div>
-      </div>
+    <div className="space-y-4">
 
       <DndContext
         sensors={sensors}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex gap-6 overflow-x-auto pb-6 px-2">
+        <div className="flex gap-4 overflow-x-auto pb-4 px-1">
           {STATUS_COLUMNS.map((column) => {
             const columnClientes = getClientesByStatus(column.id);
             const IconComponent = column.icon;
             
             return (
-              <div key={column.id} className="flex flex-col min-w-[320px] flex-shrink-0">
-                <div className={`${column.color} ${column.borderColor} border-2 rounded-t-lg backdrop-blur-sm`}>
-                  <div className="p-4 border-b border-border/20">
+              <div key={column.id} className="flex flex-col min-w-[280px] flex-shrink-0">
+                <div className={`${column.color} ${column.borderColor} border rounded-t-lg backdrop-blur-sm`}>
+                  <div className="p-3 border-b border-border/20">
                     <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-base flex items-center gap-3 text-foreground">
-                        {column.locked && <Lock className="h-4 w-4 text-primary" />}
-                        <IconComponent className="h-5 w-5 text-primary" />
+                      <h3 className="font-medium text-sm flex items-center gap-2 text-foreground">
+                        <IconComponent className="h-4 w-4 text-primary" />
                         {column.title}
                       </h3>
                       <Badge 
                         variant="secondary" 
-                        className="text-xs font-medium px-3 py-1 bg-primary/10 border border-primary/20 text-primary"
+                        className="text-xs font-medium px-2 py-0.5 bg-primary/10 border border-primary/20 text-primary"
                       >
                         {columnClientes.length}
                       </Badge>
@@ -271,7 +224,7 @@ const KanbanBoard = () => {
 
                 <SortableContext items={columnClientes.map(c => c.id.toString())} strategy={verticalListSortingStrategy}>
                   <div 
-                    className={`flex-1 p-4 space-y-4 min-h-[500px] ${column.color} ${column.borderColor} border-2 border-t-0 rounded-b-lg backdrop-blur-sm transition-all duration-300 hover:shadow-lg group`}
+                    className={`flex-1 p-3 space-y-3 min-h-[400px] ${column.color} ${column.borderColor} border border-t-0 rounded-b-lg backdrop-blur-sm transition-all duration-300 hover:shadow-lg group`}
                   >
                     {columnClientes.map((cliente) => (
                       <ClienteCard
@@ -280,13 +233,13 @@ const KanbanBoard = () => {
                         processosCount={getProcessosCount(cliente.id)}
                         onClick={() => handleClienteClick(cliente)}
                         onGerenciarProcessos={handleGerenciarProcessos}
-                        locked={column.locked}
+                        locked={false}
                       />
                     ))}
                     {columnClientes.length === 0 && (
-                      <div className="flex flex-col items-center justify-center h-32 text-muted-foreground text-sm space-y-2">
-                        <IconComponent className="h-8 w-8 opacity-50" />
-                        <span>Nenhum cliente nesta coluna</span>
+                      <div className="flex flex-col items-center justify-center h-24 text-muted-foreground text-xs space-y-1">
+                        <IconComponent className="h-6 w-6 opacity-50" />
+                        <span>Nenhum cliente</span>
                       </div>
                     )}
                   </div>

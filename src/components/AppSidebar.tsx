@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { Users, Scale, LogOut, User, Workflow, Home } from "lucide-react";
+import { ThemeToggle } from "./ThemeToggle";
 import {
   Sidebar,
   SidebarContent,
@@ -85,14 +86,17 @@ export function AppSidebar() {
             </div>
           )}
           
-          <Button
-            variant="ghost"
-            onClick={logout}
-            className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent"
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            {!collapsed && "Sair"}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              onClick={logout}
+              className="flex-1 justify-start text-sidebar-foreground hover:bg-sidebar-accent"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              {!collapsed && "Sair"}
+            </Button>
+            <ThemeToggle />
+          </div>
         </div>
       </SidebarContent>
     </Sidebar>
