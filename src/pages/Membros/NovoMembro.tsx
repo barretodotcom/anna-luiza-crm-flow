@@ -41,10 +41,7 @@ const Membros = () => {
 
         if (error) throw error;
 
-        const { error: updateError } = await supabase.rpc('update_user_password', {
-          user_id: data[0].id,
-          nova_senha: form.senha,
-        });
+        // Senha já foi hashada e salva na inserção acima
 
       toast({
         title: "Membro cadastrado",

@@ -10,6 +10,10 @@ import { useToast } from '@/hooks/use-toast';
 const Perfil = () => {
   const { user, setUser } = useAuth();
   const { toast } = useToast();
+
+  const hashSenha = (senha: string) => {
+    return btoa(senha);
+  };
   const [form, setForm] = useState({
     nome: user?.nome || '',
     email: user?.email || '',
@@ -89,11 +93,11 @@ const Perfil = () => {
         return;
         }
 
-        // Atualiza senha usando função segura do banco
-        const { error: updateError } = await supabase.rpc('update_user_password', {
-          user_id: user?.id,
-          nova_senha: form.novaSenha,
-        });
+        // Atualiza senha diretamente na tabela
+        const { error: updateError } = await supabase
+          .from('anna_luiza_usuarios')
+          .update({ senha_hash: hashSenha(form.novaSenha) })
+          .eq('id', user?.id);
 
         if (updateError) throw updateError;
 
