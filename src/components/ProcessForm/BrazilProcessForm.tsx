@@ -7,13 +7,40 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, Scale, Users, DollarSign, Calendar, Settings } from 'lucide-react';
 import { Processo } from '@/types/processo';
+import ReactInputMask from 'react-input-mask';
 
 interface BrazilProcessFormProps {
   processo: Partial<Processo>;
   onChange: (field: keyof Processo, value: any) => void;
 }
 
+
+const assuntosPorClasse: Record<string, { value: string; label: string }[]> = {
+  '801': [
+    { value: '1146', label: 'Usucapião Extraordinária' },
+    { value: '1147', label: 'Usucapião Ordinária' },
+  ],
+  '843': [
+    { value: '1118', label: 'Posse' },
+    { value: '1150', label: 'Esbulho Possessório' },
+  ],
+  '46': [
+    { value: '953', label: 'Pensão Alimentícia' },
+    { value: '954', label: 'Prestação de Alimentos' },
+  ],
+  '72': [
+    { value: '965', label: 'Separação Litigiosa' },
+    { value: '966', label: 'Divórcio Contencioso' },
+  ],
+  '875': [
+    { value: '1178', label: 'Descumprimento Contratual' },
+    { value: '1179', label: 'Rescisão por Inadimplemento' },
+  ],
+};
+
 const BrazilProcessForm: React.FC<BrazilProcessFormProps> = ({ processo, onChange }) => {
+  const assuntosCompatíveis = processo.classe_processual ? assuntosPorClasse[processo.classe_processual] || [] : [];
+
   return (
     <Tabs defaultValue="identificacao" className="w-full">
       <TabsList className="grid w-full grid-cols-6">
@@ -47,13 +74,16 @@ const BrazilProcessForm: React.FC<BrazilProcessFormProps> = ({ processo, onChang
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="numero_cnj">Número CNJ (formato: 0000000-00.0000.0.00.0000)</Label>
-            <Input
-              id="numero_cnj"
+            <ReactInputMask
+              mask="9999999-99.9999.9.99.9999"
               value={processo.numero_cnj || ''}
               onChange={(e) => onChange('numero_cnj', e.target.value)}
               placeholder="0000000-00.0000.0.00.0000"
-              pattern="\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}"
-            />
+              id="numero_cnj"
+              maskChar={null}
+            >
+              {(inputProps: any) => <Input {...inputProps} />}
+            </ReactInputMask>
           </div>
           <div className="space-y-2">
             <Label htmlFor="numero_interno">Número Interno</Label>
@@ -73,12 +103,31 @@ const BrazilProcessForm: React.FC<BrazilProcessFormProps> = ({ processo, onChang
                 <SelectValue placeholder="Selecione a classe" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="acao_civil_publica">Ação Civil Pública</SelectItem>
-                <SelectItem value="acao_ordinaria">Ação Ordinária</SelectItem>
-                <SelectItem value="mandado_seguranca">Mandado de Segurança</SelectItem>
-                <SelectItem value="habeas_corpus">Habeas Corpus</SelectItem>
-                <SelectItem value="acao_penal">Ação Penal</SelectItem>
+                <SelectItem value="46 - Ação de Alimentos">Ação de Alimentos</SelectItem>
+                <SelectItem value="29 - Ação de Cobrança">Ação de Cobrança</SelectItem>
+                <SelectItem value="107 - Cobrança (Aluguel, IPTU etc.)">Cobrança (Aluguel, IPTU etc.)</SelectItem>
+                <SelectItem value="72 - Divórcio Litigioso">Divórcio Litigioso</SelectItem>
+                <SelectItem value="73 - Divórcio Consensual">Divórcio Consensual</SelectItem>
+                <SelectItem value="102 - Despejo">Despejo</SelectItem>
+                <SelectItem value="353 - Execução de Título Extrajudicial">Execução de Título Extrajudicial</SelectItem>
+                <SelectItem value="1040 - Extinção de Condomínio">Extinção de Condomínio</SelectItem>
+                <SelectItem value="10162 - Falência">Falência</SelectItem>
+                <SelectItem value="54 - Guarda">Guarda</SelectItem>
+                <SelectItem value="392 - Interdição">Interdição</SelectItem>
+                <SelectItem value="252 - Investigação de Paternidade">Investigação de Paternidade</SelectItem>
+                <SelectItem value="844 - Manutenção de Posse">Manutenção de Posse</SelectItem>
+                <SelectItem value="1123 - Ação Monitória">Ação Monitória</SelectItem>
+                <SelectItem value="998 - Nunciação de Obra Nova">Nunciação de Obra Nova</SelectItem>
+                <SelectItem value="324 - Regulamentação de Visitas">Regulamentação de Visitas</SelectItem>
+                <SelectItem value="843 - Reintegração de Posse">Reintegração de Posse</SelectItem>
+                <SelectItem value="875 - Rescisão Contratual">Rescisão Contratual</SelectItem>
+                <SelectItem value="10161 - Recuperação Judicial">Recuperação Judicial</SelectItem>
+                <SelectItem value="47 - Revisão de Alimentos">Revisão de Alimentos</SelectItem>
+                <SelectItem value="801 - Usucapião">Usucapião</SelectItem>
+                <SelectItem value="233 - Alvará Judicial">Alvará Judicial</SelectItem>
               </SelectContent>
+
+
             </Select>
           </div>
           <div className="space-y-2">
@@ -91,16 +140,22 @@ const BrazilProcessForm: React.FC<BrazilProcessFormProps> = ({ processo, onChang
                 <SelectValue placeholder="Selecione o assunto" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">Direito Civil</SelectItem>
-                <SelectItem value="2">Direito Penal</SelectItem>
-                <SelectItem value="3">Direito do Trabalho</SelectItem>
-                <SelectItem value="4">Direito Tributário</SelectItem>
-                <SelectItem value="5">Direito Administrativo</SelectItem>
+                <SelectItem value="1010">Direito Civil - Geral</SelectItem>
+                <SelectItem value="1210">Cobrança</SelectItem>  {/* Aqui é o código correto para cobrança */}
+                <SelectItem value="1020">Direito Penal</SelectItem>
+                <SelectItem value="1030">Direito do Trabalho</SelectItem>
+                <SelectItem value="1040">Direito Tributário</SelectItem>
+                <SelectItem value="1050">Direito Administrativo</SelectItem>
+                <SelectItem value="1021">Crimes contra a Pessoa</SelectItem>
+                <SelectItem value="1031">Relações de Trabalho</SelectItem>
+                <SelectItem value="1211">Cobrança de Aluguéis</SelectItem>
+                <SelectItem value="1230">Contratos</SelectItem>
               </SelectContent>
             </Select>
           </div>
+
         </div>
-        
+
         <div className="grid grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label htmlFor="grau_sigilo">Grau de Sigilo</Label>

@@ -7,6 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, Scale, Users, DollarSign, Calendar, Settings } from 'lucide-react';
 import { Processo } from '@/types/processo';
+import ReactInputMask from 'react-input-mask';
 
 interface PortugalProcessFormProps {
   processo: Partial<Processo>;
@@ -47,12 +48,16 @@ const PortugalProcessForm: React.FC<PortugalProcessFormProps> = ({ processo, onC
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="numero_processo">Número do Processo no Tribunal</Label>
-            <Input
-              id="numero_processo"
+            <ReactInputMask
+              mask="999/99.9aaaaa.a9"
               value={processo.numero_processo || ''}
-              onChange={(e) => onChange('numero_processo', e.target.value)}
+              onChange={(e) => onChange('numero_processo', e.target.value.toUpperCase())}
               placeholder="Ex: 123/20.0TBPRT.P1"
-            />
+              id="numero_processo"
+              maskChar={null}
+            >
+              {(inputProps: any) => <Input {...inputProps} />}
+            </ReactInputMask>
           </div>
           <div className="space-y-2">
             <Label htmlFor="numero_interno">Número Interno</Label>
@@ -97,7 +102,7 @@ const PortugalProcessForm: React.FC<PortugalProcessFormProps> = ({ processo, onC
             </Select>
           </div>
         </div>
-        
+
         <div className="grid grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label htmlFor="area_direito">Área de Competência</Label>
@@ -115,6 +120,7 @@ const PortugalProcessForm: React.FC<PortugalProcessFormProps> = ({ processo, onC
                 <SelectItem value="familia">Direito da Família</SelectItem>
                 <SelectItem value="penal">Direito Penal</SelectItem>
                 <SelectItem value="administrativo">Direito Administrativo</SelectItem>
+                <SelectItem value="administrativo">Direito Imigratório</SelectItem>
               </SelectContent>
             </Select>
           </div>

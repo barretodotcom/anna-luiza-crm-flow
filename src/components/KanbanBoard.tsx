@@ -11,45 +11,46 @@ import { Plus, Lock, Calendar, FileText, User } from 'lucide-react';
 import ClienteCard from './ClienteCard';
 import ProcessosDialog from './ProcessosDialog';
 import { Cliente, Processo } from '@/types/processo';
+import ColumnDroppable from './ColumnDroppable';
 
 const STATUS_COLUMNS = [
-  { 
-    id: 'EM_ATENDIMENTO', 
-    title: 'Em Atendimento', 
-    color: 'bg-card/80', 
-    borderColor: 'border-border/50', 
+  {
+    id: 'EM_ATENDIMENTO',
+    title: 'Em Atendimento',
+    color: 'bg-card/80',
+    borderColor: 'border-border/50',
     locked: false,
-    icon: User 
+    icon: User
   },
-  { 
-    id: 'CONSULTORIA_AGENDADA', 
-    title: 'Consultoria Agendada', 
-    color: 'bg-card/70', 
-    borderColor: 'border-border/40', 
+  {
+    id: 'CONSULTORIA_AGENDADA',
+    title: 'Consultoria Agendada',
+    color: 'bg-card/70',
+    borderColor: 'border-border/40',
     locked: false,
     icon: Calendar
   },
-  { 
-    id: 'PROPOSTA_CUSTOMIZADA', 
-    title: 'Proposta Customizada', 
-    color: 'bg-card/60', 
-    borderColor: 'border-border/30', 
+  {
+    id: 'PROPOSTA_CUSTOMIZADA',
+    title: 'Proposta Customizada',
+    color: 'bg-card/60',
+    borderColor: 'border-border/30',
     locked: false,
     icon: FileText
   },
-  { 
-    id: 'FINALIZADO', 
-    title: 'Finalizado', 
-    color: 'bg-card/50', 
-    borderColor: 'border-border/20', 
+  {
+    id: 'FINALIZADO',
+    title: 'Finalizado',
+    color: 'bg-card/50',
+    borderColor: 'border-border/20',
     locked: false,
     icon: Plus
   },
-  { 
-    id: 'AGUARDANDO', 
-    title: 'Aguardando', 
-    color: 'bg-card/40', 
-    borderColor: 'border-border/10', 
+  {
+    id: 'AGUARDANDO',
+    title: 'Aguardando',
+    color: 'bg-card/40',
+    borderColor: 'border-border/10',
     locked: false,
     icon: Lock
   }
@@ -114,7 +115,8 @@ const KanbanBoard = () => {
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
-    
+    console.log('Drag Ended:', event, active, over);
+
     if (!over || active.id === over.id) {
       setActiveId(null);
       return;
@@ -122,7 +124,7 @@ const KanbanBoard = () => {
 
     const clienteId = parseInt(active.id as string);
     const newStatus = over.id as string;
-    
+
     // Verificar se o status é válido
     const validStatus = STATUS_COLUMNS.find(col => col.id === newStatus);
     if (!validStatus) {
@@ -203,7 +205,7 @@ const KanbanBoard = () => {
           {STATUS_COLUMNS.map((column) => {
             const columnClientes = getClientesByStatus(column.id);
             const IconComponent = column.icon;
-            
+
             return (
               <div key={column.id} className="flex flex-col min-w-[280px] flex-shrink-0">
                 <div className={`${column.color} ${column.borderColor} border rounded-t-lg backdrop-blur-sm`}>
@@ -213,8 +215,8 @@ const KanbanBoard = () => {
                         <IconComponent className="h-4 w-4 text-primary" />
                         {column.title}
                       </h3>
-                      <Badge 
-                        variant="secondary" 
+                      <Badge
+                        variant="secondary"
                         className="text-xs font-medium px-2 py-0.5 bg-primary/10 border border-primary/20 text-primary"
                       >
                         {columnClientes.length}
@@ -224,7 +226,8 @@ const KanbanBoard = () => {
                 </div>
 
                 <SortableContext items={columnClientes.map(c => c.id.toString())} strategy={verticalListSortingStrategy}>
-                  <div 
+                  <ColumnDroppable
+                    id={column.id}
                     className={`flex-1 p-3 space-y-3 min-h-[400px] ${column.color} ${column.borderColor} border border-t-0 rounded-b-lg backdrop-blur-sm transition-all duration-300 hover:shadow-lg group`}
                   >
                     {columnClientes.map((cliente) => (
@@ -243,7 +246,7 @@ const KanbanBoard = () => {
                         <span>Nenhum cliente</span>
                       </div>
                     )}
-                  </div>
+                  </ColumnDroppable>
                 </SortableContext>
               </div>
             );
@@ -256,7 +259,7 @@ const KanbanBoard = () => {
               <ClienteCard
                 cliente={clientes.find(c => c.id.toString() === activeId)!}
                 processosCount={getProcessosCount(parseInt(activeId))}
-                onClick={() => {}}
+                onClick={() => { }}
                 locked={false}
               />
             </div>
