@@ -2,18 +2,24 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Save, Trash2, FileText, Scale, Users, DollarSign, Calendar, AlertCircle, Settings, BarChart3 } from 'lucide-react';
+import { Plus, Save, Trash2, Scale, Edit, AlertTriangle, FileText } from 'lucide-react';
 import { Processo } from '@/types/processo';
+import BrazilProcessForm from './ProcessForm/BrazilProcessForm';
+import PortugalProcessForm from './ProcessForm/PortugalProcessForm';
+import AccessDenied from './ProcessForm/AccessDenied';
+
+interface Cliente {
+  id: number;
+  name: string;
+  STATUS: string;
+  destino?: string;
+}
 
 interface ProcessosDialogProps {
   open: boolean;
@@ -31,6 +37,8 @@ const ProcessosDialog: React.FC<ProcessosDialogProps> = ({
   onProcessosUpdate,
 }) => {
   const [clienteProcessos, setClienteProcessos] = useState<Processo[]>([]);
+  const [cliente, setCliente] = useState<Cliente | null>(null);
+  const [loading, setLoading] = useState(false);
   const [novoProcesso, setNovoProcesso] = useState<Partial<Processo>>({
     anna_luiza_cliente_id: clienteId || 0,
     pais: 'Brasil',
@@ -108,11 +116,36 @@ const ProcessosDialog: React.FC<ProcessosDialogProps> = ({
   const { toast } = useToast();
 
   useEffect(() => {
-    if (clienteId && open) {
-      const processosCliente = processos.filter(p => p.anna_luiza_cliente_id === clienteId);
-      setClienteProcessos(processosCliente);
-      setNovoProcesso(prev => ({ ...prev, anna_luiza_cliente_id: clienteId }));
-    }
+    const fetchCliente = async () => {
+      if (clienteId && open) {
+        setLoading(true);
+        try {
+          const { data, error } = await supabase
+            .from('anna_luiza_clientes')
+            .select('id, name, STATUS, destino')
+            .eq('id', clienteId)
+            .single();
+
+          if (error) {
+            console.error('Erro ao buscar cliente:', error);
+            return;
+          }
+
+          setCliente(data);
+          const processosCliente = processos.filter(p => p.anna_luiza_cliente_id === clienteId);
+          setClienteProcessos(processosCliente);
+          setNovoProcesso(prev => ({ 
+            ...prev, 
+            anna_luiza_cliente_id: clienteId,
+            pais: data?.destino || 'Brasil'
+          }));
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchCliente();
   }, [clienteId, processos, open]);
 
   const handleSalvarProcesso = async () => {
@@ -179,7 +212,55 @@ const ProcessosDialog: React.FC<ProcessosDialogProps> = ({
     }
   };
 
-  if (!clienteId) return null;
+  if (!clienteId || loading) return null;
+
+  // Verificar regras de acesso
+  const canAccessProcesses = () => {
+    return true; // Sempre permitir acesso independente do status
+  };
+
+  const getAccessDeniedMessage = () => {
+    return ''; // Sem mensagens de acesso negado
+  };
+
+  const handleProcessoChange = (field: keyof Processo, value: any) => {
+    setNovoProcesso(prev => ({ ...prev, [field]: value }));
+  };
+
+  const renderProcessForm = () => {
+    const destino = novoProcesso.pais || cliente?.destino;
+    
+    if (!destino) {
+      return (
+        <AccessDenied 
+          message="Selecione a jurisdição (Brasil ou Portugal) para configurar o formulário."
+        />
+      );
+    }
+    
+    switch (destino) {
+      case 'Brasil':
+        return (
+          <BrazilProcessForm 
+            processo={novoProcesso} 
+            onChange={handleProcessoChange}
+          />
+        );
+      case 'Portugal':
+        return (
+          <PortugalProcessForm 
+            processo={novoProcesso} 
+            onChange={handleProcessoChange}
+          />
+        );
+      default:
+        return (
+          <AccessDenied 
+            message="Jurisdição inválida. Selecione Brasil ou Portugal."
+          />
+        );
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -200,223 +281,58 @@ const ProcessosDialog: React.FC<ProcessosDialogProps> = ({
               <Badge variant="outline" className="text-sm px-4 py-2">
                 Total: {clienteProcessos.length} processo(s)
               </Badge>
+              {(cliente?.destino || novoProcesso.pais) && (
+                <Badge variant="secondary" className="text-sm px-3 py-1">
+                  Jurisdição Padrão: {cliente?.destino || 'Não definida'}
+                </Badge>
+              )}
             </div>
-            <Button onClick={() => setMostrarForm(true)} className="gap-2">
+            <Button 
+              onClick={() => setMostrarForm(true)} 
+              className="gap-2"
+              disabled={!canAccessProcesses()}
+            >
               <Plus className="h-4 w-4" />
               Novo Processo
             </Button>
           </div>
 
-          {mostrarForm && (
+          {!canAccessProcesses() && (
+            <AccessDenied 
+              message={getAccessDeniedMessage()}
+            />
+          )}
+
+          {mostrarForm && canAccessProcesses() && (
             <Card className="border-primary/20">
               <CardHeader>
-                <CardTitle className="text-lg">
-                  {editandoProcesso ? 'Editar Processo' : 'Novo Processo'}
+                <CardTitle className="text-lg flex items-center justify-between">
+                  <span>
+                    {editandoProcesso ? 'Editar Processo' : 'Novo Processo'}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="destino-select" className="text-sm font-normal">Jurisdição:</Label>
+                    <Select
+                      value={novoProcesso.pais || cliente?.destino || ''}
+                      onValueChange={(value) => handleProcessoChange('pais', value)}
+                    >
+                      <SelectTrigger className="w-[120px] h-8">
+                        <SelectValue placeholder="Destino" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Brasil">Brasil</SelectItem>
+                        <SelectItem value="Portugal">Portugal</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <Tabs defaultValue="identificacao" className="w-full">
-                  <TabsList className="grid w-full grid-cols-6">
-                    <TabsTrigger value="identificacao" className="gap-2">
-                      <FileText className="h-4 w-4" />
-                      Identificação
-                    </TabsTrigger>
-                    <TabsTrigger value="tribunal" className="gap-2">
-                      <Scale className="h-4 w-4" />
-                      Tribunal
-                    </TabsTrigger>
-                    <TabsTrigger value="partes" className="gap-2">
-                      <Users className="h-4 w-4" />
-                      Partes
-                    </TabsTrigger>
-                    <TabsTrigger value="financeiro" className="gap-2">
-                      <DollarSign className="h-4 w-4" />
-                      Financeiro
-                    </TabsTrigger>
-                    <TabsTrigger value="prazos" className="gap-2">
-                      <Calendar className="h-4 w-4" />
-                      Prazos
-                    </TabsTrigger>
-                    <TabsTrigger value="outros" className="gap-2">
-                      <Settings className="h-4 w-4" />
-                      Outros
-                    </TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="identificacao" className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="numero_cnj">Número CNJ</Label>
-                        <Input
-                          id="numero_cnj"
-                          value={novoProcesso.numero_cnj || ''}
-                          onChange={(e) => setNovoProcesso(prev => ({ ...prev, numero_cnj: e.target.value }))}
-                          placeholder="NNNNNNN-DD.AAAA.J.TR.OOOO"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="numero_interno">Número Interno</Label>
-                        <Input
-                          id="numero_interno"
-                          value={novoProcesso.numero_interno || ''}
-                          onChange={(e) => setNovoProcesso(prev => ({ ...prev, numero_interno: e.target.value }))}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="classe_processual">Classe Processual</Label>
-                        <Input
-                          id="classe_processual"
-                          value={novoProcesso.classe_processual || ''}
-                          onChange={(e) => setNovoProcesso(prev => ({ ...prev, classe_processual: e.target.value }))}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="assunto_principal">Assunto Principal</Label>
-                        <Input
-                          id="assunto_principal"
-                          value={novoProcesso.assunto_principal || ''}
-                          onChange={(e) => setNovoProcesso(prev => ({ ...prev, assunto_principal: e.target.value }))}
-                        />
-                      </div>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="tribunal" className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="tribunal_comarca">Tribunal/Comarca</Label>
-                        <Input
-                          id="tribunal_comarca"
-                          value={novoProcesso.tribunal_comarca || ''}
-                          onChange={(e) => setNovoProcesso(prev => ({ ...prev, tribunal_comarca: e.target.value }))}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="juiz_responsavel">Juiz Responsável</Label>
-                        <Input
-                          id="juiz_responsavel"
-                          value={novoProcesso.juiz_responsavel || ''}
-                          onChange={(e) => setNovoProcesso(prev => ({ ...prev, juiz_responsavel: e.target.value }))}
-                        />
-                      </div>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="partes" className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="parte_contraria">Parte Contrária</Label>
-                        <Input
-                          id="parte_contraria"
-                          value={novoProcesso.parte_contraria || ''}
-                          onChange={(e) => setNovoProcesso(prev => ({ ...prev, parte_contraria: e.target.value }))}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="cliente_tipo">Tipo do Cliente</Label>
-                        <Select
-                          value={novoProcesso.cliente_tipo || ''}
-                          onValueChange={(value) => setNovoProcesso(prev => ({ ...prev, cliente_tipo: value }))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="requerente">Requerente</SelectItem>
-                            <SelectItem value="requerido">Requerido</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="financeiro" className="space-y-4">
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="valor_causa">Valor da Causa</Label>
-                        <Input
-                          id="valor_causa"
-                          type="number"
-                          value={novoProcesso.valor_causa || 0}
-                          onChange={(e) => setNovoProcesso(prev => ({ ...prev, valor_causa: Number(e.target.value) }))}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="honorarios_contratuais">Honorários Contratuais</Label>
-                        <Input
-                          id="honorarios_contratuais"
-                          type="number"
-                          value={novoProcesso.honorarios_contratuais || 0}
-                          onChange={(e) => setNovoProcesso(prev => ({ ...prev, honorarios_contratuais: Number(e.target.value) }))}
-                        />
-                      </div>
-                      <div className="space-y-2 flex items-end">
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            id="justica_gratuita"
-                            checked={novoProcesso.justica_gratuita || false}
-                            onCheckedChange={(checked) => setNovoProcesso(prev => ({ ...prev, justica_gratuita: checked }))}
-                          />
-                          <Label htmlFor="justica_gratuita">Justiça Gratuita</Label>
-                        </div>
-                      </div>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="prazos" className="space-y-4">
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="data_distribuicao">Data Distribuição</Label>
-                        <Input
-                          id="data_distribuicao"
-                          type="date"
-                          value={novoProcesso.data_distribuicao || ''}
-                          onChange={(e) => setNovoProcesso(prev => ({ ...prev, data_distribuicao: e.target.value }))}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="ultimo_prazo">Último Prazo</Label>
-                        <Input
-                          id="ultimo_prazo"
-                          value={novoProcesso.ultimo_prazo || ''}
-                          onChange={(e) => setNovoProcesso(prev => ({ ...prev, ultimo_prazo: e.target.value }))}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="proxima_audiencia">Próxima Audiência</Label>
-                        <Input
-                          id="proxima_audiencia"
-                          type="datetime-local"
-                          value={novoProcesso.proxima_audiencia || ''}
-                          onChange={(e) => setNovoProcesso(prev => ({ ...prev, proxima_audiencia: e.target.value }))}
-                        />
-                      </div>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="outros" className="space-y-4">
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="resumo_caso">Resumo do Caso</Label>
-                        <Textarea
-                          id="resumo_caso"
-                          value={novoProcesso.resumo_caso || ''}
-                          onChange={(e) => setNovoProcesso(prev => ({ ...prev, resumo_caso: e.target.value }))}
-                          rows={3}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="observacoes">Observações</Label>
-                        <Textarea
-                          id="observacoes"
-                          value={novoProcesso.observacoes || ''}
-                          onChange={(e) => setNovoProcesso(prev => ({ ...prev, observacoes: e.target.value }))}
-                          rows={3}
-                        />
-                      </div>
-                    </div>
-                  </TabsContent>
-                </Tabs>
+                {novoProcesso.pais ? renderProcessForm() : (
+                  <AccessDenied 
+                    message="Selecione a jurisdição (Brasil ou Portugal) para configurar o formulário."
+                  />
+                )}
 
                 <div className="flex justify-end gap-2 mt-6">
                   <Button

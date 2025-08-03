@@ -18,7 +18,7 @@ const STATUS_COLUMNS = [
     title: 'Em Atendimento', 
     color: 'bg-card/80', 
     borderColor: 'border-border/50', 
-    locked: true,
+    locked: false,
     icon: User 
   },
   { 
@@ -130,6 +130,7 @@ const KanbanBoard = () => {
       return;
     }
 
+    // Permitir movimento para qualquer status (removendo restrições)
     try {
       const { error } = await supabase
         .from('anna_luiza_clientes')

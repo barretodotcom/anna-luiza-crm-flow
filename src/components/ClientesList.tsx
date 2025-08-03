@@ -11,7 +11,7 @@ import ProcessosDialog from './ProcessosDialog';
 import { Cliente, Processo } from '@/types/processo';
 
 const STATUS_CONFIG = {
-  'EM_ATENDIMENTO': { label: 'Em Atendimento', color: 'bg-info/10 text-info border-info/20', locked: true },
+  'EM_ATENDIMENTO': { label: 'Em Atendimento', color: 'bg-info/10 text-info border-info/20', locked: false },
   'CONSULTORIA_AGENDADA': { label: 'Consultoria Agendada', color: 'bg-warning/10 text-warning border-warning/20', locked: false },
   'PROPOSTA_CUSTOMIZADA': { label: 'Proposta Customizada', color: 'bg-primary/10 text-primary border-primary/20', locked: false },
   'FINALIZADO': { label: 'Finalizado', color: 'bg-success/10 text-success border-success/20', locked: false },
@@ -62,31 +62,12 @@ const ClientesList = () => {
   };
 
   const handleClienteClick = (cliente: Cliente) => {
-    if (cliente.STATUS === 'EM_ATENDIMENTO') {
-      toast({
-        variant: "destructive",
-        title: "Cliente em atendimento",
-        description: "Não é possível gerenciar processos de clientes em atendimento",
-      });
-      return;
-    }
-    
     setSelectedClienteId(cliente.id);
     setProcessosDialogOpen(true);
   };
 
   const handleGerenciarProcessos = (cliente: Cliente, event: React.MouseEvent) => {
     event.stopPropagation();
-    
-    if (cliente.STATUS === 'EM_ATENDIMENTO') {
-      toast({
-        variant: "destructive",
-        title: "Cliente em atendimento",
-        description: "Não é possível gerenciar processos de clientes em atendimento",
-      });
-      return;
-    }
-    
     setSelectedClienteId(cliente.id);
     setProcessosDialogOpen(true);
   };
@@ -155,8 +136,7 @@ const ClientesList = () => {
                     >
                       <TableCell>
                         <div className="space-y-1">
-                          <div className="font-medium text-foreground flex items-center gap-2">
-                            {statusConfig.locked && <Lock className="h-3 w-3 text-info" />}
+                          <div className="font-medium text-foreground">
                             {cliente.name || 'Nome não informado'}
                           </div>
                           {cliente.informacoes_adicionais && (
@@ -215,21 +195,19 @@ const ClientesList = () => {
                       
                       <TableCell>
                         <div className="flex justify-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => handleGerenciarProcessos(cliente, e)}
-                            disabled={statusConfig.locked}
-                            className="h-8 w-8 p-0 hover:bg-primary/10"
-                            title="Gerenciar Processos"
-                          >
-                            <Scale className="h-4 w-4" />
-                          </Button>
+                           <Button
+                             variant="ghost"
+                             size="sm"
+                             onClick={(e) => handleGerenciarProcessos(cliente, e)}
+                             className="h-8 w-8 p-0 hover:bg-primary/10"
+                             title="Gerenciar Processos"
+                           >
+                             <Scale className="h-4 w-4" />
+                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleClienteClick(cliente)}
-                            disabled={statusConfig.locked}
                             className="h-8 w-8 p-0 hover:bg-primary/10"
                             title="Visualizar Cliente"
                           >
